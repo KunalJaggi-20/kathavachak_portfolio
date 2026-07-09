@@ -211,12 +211,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           <li onClick={() => scrollToPercent(0.50)} className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Studio</li>
           <li onClick={() => scrollToPercent(1.00)} className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Contact</li>
         </ul>
-        <button
-          onClick={() => setIsMuted(!isMuted)}
-          className="text-[10px] tracking-[0.15em] uppercase font-sans py-2 px-5 border border-white/20 rounded-full cursor-pointer opacity-60 hover:opacity-100 transition-all select-none text-white hover:border-[#D96B3A]"
-        >
-          {isMuted ? 'Sound Off' : 'Sound On'}
-        </button>
+
       </nav>
 
       {/* Section Counter */}
@@ -381,9 +376,10 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           <div className="gsap-animate opacity-0">
             <a
               href="#"
-              className="inline-block text-[10px] tracking-[0.2em] uppercase font-sans py-4 px-8 border border-white/20 rounded-full hover:bg-white hover:text-black cursor-pointer transition-all duration-300 text-white select-none"
+              className="btn-cinematic select-none cursor-pointer"
             >
-              Book a Discovery Call &rarr;
+              <span>Book a Discovery Call</span>
+              <span className="btn-arrow">&rarr;</span>
             </a>
           </div>
         </div>
@@ -452,6 +448,49 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           100% {
             text-shadow: 0 0 18px rgba(217, 107, 58, 0.85);
           }
+        }
+        .btn-cinematic {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 1rem 2.25rem;
+          font-size: 10px;
+          font-family: var(--font-sans, sans-serif);
+          font-weight: 500;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          color: #fff;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(217, 107, 58, 0.35);
+          border-radius: 9999px;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+          box-shadow: 0 0 0 rgba(217, 107, 58, 0);
+          z-index: 10;
+        }
+        .btn-cinematic::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background: linear-gradient(135deg, #D96B3A 0%, #a8481d 100%);
+          opacity: 0;
+          z-index: -1;
+          transition: opacity 0.4s ease;
+        }
+        .btn-cinematic:hover {
+          border-color: #D96B3A;
+          box-shadow: 0 0 25px rgba(217, 107, 58, 0.45);
+          transform: translateY(-2px);
+        }
+        .btn-cinematic:hover::before {
+          opacity: 1;
+        }
+        .btn-cinematic .btn-arrow {
+          transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .btn-cinematic:hover .btn-arrow {
+          transform: translateX(5px);
         }
       `}</style>
     </>

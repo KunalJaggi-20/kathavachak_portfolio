@@ -11,13 +11,7 @@ export default function AmbientParticles({ scrollPercent }) {
     let particles = [];
     let width = window.innerWidth;
     let height = window.innerHeight;
-    let mouse = { x: width / 2, y: height / 2 };
-
-    const handleMouseMove = (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    };
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    // Mouse tracking removed as per request to disable mouse-follow particle parallax
 
     const resize = () => {
       width = window.innerWidth;
@@ -125,10 +119,10 @@ export default function AmbientParticles({ scrollPercent }) {
         const noiseX = Math.sin(t + p.noiseX1) * Math.cos(t * 0.8 + p.noiseX2) * 30 * (1 + p.depth);
         const noiseY = Math.cos(t + p.noiseY1) * Math.sin(t * 0.9 + p.noiseY2) * 30 * (1 + p.depth);
         
-        // Scroll Parallax + Mouse Parallax
+        // Scroll Parallax (Mouse movement tracking disabled)
         const scrollOffset = (scrollPercent || 0) * height * 1.2;
-        const parallaxX = (mouse.x - width / 2) * (p.depth * 0.03);
-        const parallaxY = ((mouse.y - height / 2) * (p.depth * 0.03)) - (scrollOffset * p.depth);
+        const parallaxX = 0;
+        const parallaxY = - (scrollOffset * p.depth);
 
         p.x = p.originX + noiseX + parallaxX;
         p.y = p.originY + noiseY + parallaxY;
@@ -183,7 +177,6 @@ export default function AmbientParticles({ scrollPercent }) {
 
     return () => {
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
   }, [scrollPercent]);
