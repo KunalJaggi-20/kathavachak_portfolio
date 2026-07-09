@@ -1,7 +1,37 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
 export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
+  const [timecode, setTimecode] = useState("00:00:00:00");
+
+  useEffect(() => {
+    let frame = 0;
+    let sec = 0;
+    let min = 0;
+    let hr = 0;
+
+    const interval = setInterval(() => {
+      frame++;
+      if (frame >= 24) {
+        frame = 0;
+        sec++;
+        if (sec >= 60) {
+          sec = 0;
+          min++;
+          if (min >= 60) {
+            min = 0;
+            hr++;
+          }
+        }
+      }
+      
+      const format = (val) => String(val).padStart(2, '0');
+      setTimecode(`${format(hr)}:${format(min)}:${format(sec)}:${format(frame)}`);
+    }, 41.67); // 24 FPS approx.
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Helper to interpolate opacity and transform based on scroll
   const getSectionStyles = (p, start, peak, end) => {
     let o = 0;
@@ -101,12 +131,51 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
       {/* Intro Black Screen */}
       <div
         style={getIntroStyles()}
-        className="fixed inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-400 ease"
+        className="fixed inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-400 ease select-none"
       >
-        <div className="text-center relative z-10 flex flex-col items-center">
-          <div className="text-[10px] tracking-[0.3em] uppercase opacity-60 mb-8 font-sans text-white">KATHAVACHAK</div>
-          <div className="font-serif text-4xl md:text-6xl mb-12 text-white font-light tracking-tight">Scroll to Begin</div>
-          <div className="flex items-center justify-center gap-4 text-[10px] tracking-[0.2em] uppercase opacity-50 text-white">
+        {/* Dynamic Video Viewfinder HUD */}
+        <div className="absolute inset-8 border border-white/5 pointer-events-none flex flex-col justify-between p-4 text-[9px] font-mono tracking-widest text-white/40">
+          {/* Top Row: REC + 24FPS */}
+          <div className="flex justify-between items-center select-none font-sans">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <span>REC</span>
+            </div>
+            <div>24 FPS</div>
+          </div>
+          
+          {/* Bottom Row: RAW 4K + TIMECODE */}
+          <div className="flex justify-between items-center select-none font-sans">
+            <div>RAW 4K · ISO 400</div>
+            <div>TC {timecode}</div>
+          </div>
+        </div>
+
+        {/* Viewfinder Corners (thin brackets bounding the center content) */}
+        <div className="absolute w-[280px] h-[180px] md:w-[420px] md:h-[260px] pointer-events-none flex flex-col justify-between opacity-30 animate-pulse-slow">
+          <div className="flex justify-between w-full">
+            {/* Top-left */}
+            <div className="w-6 h-6 border-t border-l border-white" />
+            {/* Top-right */}
+            <div className="w-6 h-6 border-t border-r border-white" />
+          </div>
+          <div className="flex justify-between w-full">
+            {/* Bottom-left */}
+            <div className="w-6 h-6 border-b border-l border-white" />
+            {/* Bottom-right */}
+            <div className="w-6 h-6 border-b border-r border-white" />
+          </div>
+        </div>
+
+        {/* Intro content */}
+        <div className="text-center relative z-10 flex flex-col items-center select-none">
+          <div className="text-[10px] tracking-[0.4em] uppercase opacity-50 mb-7 font-sans text-white animate-[logoLetterSpacing_4s_ease-out_forwards]">
+            KATHAVACHAK
+          </div>
+          <div className="font-serif text-4xl md:text-6xl mb-12 text-white font-light tracking-tight hover:text-accent transition-colors duration-500 cursor-default">
+            Scroll to Begin
+          </div>
+          <div className="flex items-center justify-center gap-4 text-[10px] tracking-[0.2em] uppercase opacity-40 text-white font-sans">
             <span className="w-6 h-[1px] bg-white/40"></span>
             Storytelling Studio
             <span className="w-6 h-[1px] bg-white/40"></span>
@@ -327,6 +396,17 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
         @keyframes scrollLine {
           0%, 100% { transform: scaleY(0.2); transform-origin: top; }
           50% { transform: scaleY(1); transform-origin: top; }
+        }
+        @keyframes logoLetterSpacing {
+          0% { letter-spacing: 0.1em; opacity: 0; filter: blur(5px); }
+          100% { letter-spacing: 0.4em; opacity: 0.5; filter: blur(0px); }
+        }
+        .animate-pulse-slow {
+          animation: pulseSlow 4s ease-in-out infinite;
+        }
+        @keyframes pulseSlow {
+          0%, 100% { opacity: 0.25; transform: scale(0.98); }
+          50% { opacity: 0.45; transform: scale(1.02); }
         }
       `}</style>
     </>
