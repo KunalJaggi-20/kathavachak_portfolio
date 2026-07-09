@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import CanvasRenderer from './components/CanvasRenderer';
 import OverlayUI from './components/OverlayUI';
 import CustomCursor from './components/CustomCursor';
+import AmbientParticles from './components/AmbientParticles';
 
 export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -45,6 +46,7 @@ export default function App() {
       {/* UI Elements on top of Canvas */}
       {isLoaded && (
         <>
+          <AmbientParticles scrollPercent={scrollPercent} />
           <OverlayUI 
             scrollPercent={scrollPercent} 
             isMuted={isMuted}

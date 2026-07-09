@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 
 export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
   // Helper to interpolate opacity and transform based on scroll
@@ -41,202 +42,283 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
   // Determine current chapter (1 to 5)
   const currentChapter = Math.min(5, Math.floor(scrollPercent * 5) + 1);
 
+  // Use refs for GSAP stagger effects when a section comes into view
+  const sectionRefs = useRef([]);
+
+  useEffect(() => {
+    // GSAP blur, translateY, and fade in logic 
+    // triggered based on scrollPercent active sections.
+    // Since getSectionStyles handles overall section opacity/translate,
+    // we use GSAP to animate internal text elements once a section passes a threshold.
+    sectionRefs.current.forEach((section, index) => {
+      if (!section) return;
+
+      const elements = section.querySelectorAll('.gsap-animate');
+      const startTrigger = index * 0.2; // roughly matches sections (0, 0.2, 0.4, 0.6, 0.8)
+
+      // If we crossed into this section's peak visibility
+      if (scrollPercent >= startTrigger && scrollPercent < startTrigger + 0.2) {
+        if (!section.classList.contains('is-animated')) {
+          section.classList.add('is-animated');
+          gsap.fromTo(elements,
+            { opacity: 0, y: 30, filter: 'blur(10px)' },
+            {
+              opacity: 1,
+              y: 0,
+              filter: 'blur(0px)',
+              duration: 0.8,
+              stagger: 0.15,
+              ease: 'power3.out',
+              overwrite: 'auto'
+            }
+          );
+        }
+      } else {
+        if (section.classList.contains('is-animated')) {
+          section.classList.remove('is-animated');
+          // Reset when out of view
+          gsap.set(elements, { opacity: 0, y: 30, filter: 'blur(10px)' });
+        }
+      }
+    });
+  }, [scrollPercent]);
+
+  // Accent color overrides where tailwind classes aren't specific
+  const accentColor = '#D96B3A';
+
   return (
     <>
       {/* Intro Black Screen */}
-      <div 
+      <div
         style={getIntroStyles()}
         className="fixed inset-0 z-50 bg-black flex items-center justify-center transition-opacity duration-400 ease"
       >
-        {/* Pulsing circles */}
-        <div className="absolute w-20 h-20 border border-white/30 rounded-full animate-ping [animation-duration:2.4s]"></div>
-        <div className="absolute w-20 h-20 border border-white/20 rounded-full animate-ping [animation-duration:2.4s] [animation-delay:1.2s]"></div>
-        
-        <div className="text-center relative z-10">
-          <div className="text-xs tracking-[0.4em] uppercase opacity-60 mb-6 font-sans">Chapter I · The Odyssey</div>
-          <div className="font-serif italic text-5xl md:text-7xl mb-10 text-ink">Scroll to View</div>
-          <div className="flex items-center justify-center gap-3 text-xs tracking-[0.3em] uppercase opacity-70">
-            <span className="w-8 h-px bg-white/50"></span>
-            Begin the journey
-            <span className="w-8 h-px bg-white/50"></span>
+        <div className="text-center relative z-10 flex flex-col items-center">
+          <div className="text-[10px] tracking-[0.3em] uppercase opacity-60 mb-8 font-sans text-white">KATHAVACHAK</div>
+          <div className="font-serif text-4xl md:text-6xl mb-12 text-white font-light tracking-tight">Scroll to Begin</div>
+          <div className="flex items-center justify-center gap-4 text-[10px] tracking-[0.2em] uppercase opacity-50 text-white">
+            <span className="w-6 h-[1px] bg-white/40"></span>
+            Storytelling Studio
+            <span className="w-6 h-[1px] bg-white/40"></span>
           </div>
         </div>
       </div>
 
       {/* Progress Bar */}
-      <div 
-        style={{ transform: `scaleX(${scrollPercent})`, transformOrigin: 'left' }}
-        className="fixed top-0 left-0 h-[2px] w-full bg-gradient-to-r from-accent to-accent2 z-45 transition-transform duration-100 ease-out" 
+      <div
+        style={{ transform: `scaleX(${scrollPercent})`, transformOrigin: 'left', backgroundColor: accentColor }}
+        className="fixed top-0 left-0 h-[2px] w-full z-45 transition-transform duration-100 ease-out"
       />
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 p-7 md:px-10 md:py-7 flex justify-between items-center z-40 mix-blend-difference select-none pointer-events-auto">
-        <div className="logo font-serif text-2xl tracking-wider text-ink">
-          Horizon<span className="text-accent">.</span>
+      <nav className="fixed top-0 left-0 right-0 p-8 md:px-12 md:py-8 flex justify-between items-center z-40 select-none pointer-events-auto mix-blend-difference">
+        <div className="logo font-sans text-[12px] font-medium tracking-[0.2em] uppercase text-white">
+          KATHAVACHAK<span style={{ color: accentColor }}>.</span>
         </div>
-        <ul className="hidden md:flex gap-9 text-[11px] tracking-[0.18em] uppercase font-sans text-ink">
-          <li className="opacity-75 hover:opacity-100 cursor-pointer transition-opacity">Work</li>
-          <li className="opacity-75 hover:opacity-100 cursor-pointer transition-opacity">Studio</li>
-          <li className="opacity-75 hover:opacity-100 cursor-pointer transition-opacity">Journal</li>
-          <li className="opacity-75 hover:opacity-100 cursor-pointer transition-opacity">Contact</li>
+        <ul className="hidden md:flex gap-12 text-[10px] tracking-[0.15em] uppercase font-sans text-white">
+          <li className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Work</li>
+          <li className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Studio</li>
+          <li className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Contact</li>
         </ul>
-        {/* Subtitle/Audio toggle on the header for extra premium feel */}
-        <button 
-          onClick={() => setIsMuted(!isMuted)} 
-          className="text-[10px] tracking-[0.2em] uppercase font-sans py-1 px-3 border border-white/20 rounded-full hover:border-[#ff5b2e] cursor-pointer opacity-70 hover:opacity-100 transition-all select-none"
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="text-[10px] tracking-[0.15em] uppercase font-sans py-2 px-5 border border-white/20 rounded-full cursor-pointer opacity-60 hover:opacity-100 transition-all select-none text-white hover:border-[#D96B3A]"
         >
-          {isMuted ? 'Sound Off Track' : 'Sound On Track'}
+          {isMuted ? 'Sound Off' : 'Sound On'}
         </button>
       </nav>
 
       {/* Section Counter */}
-      <div className="fixed right-10 top-1/2 -translate-y-1/2 z-30 text-[11px] tracking-[0.3em] uppercase select-none opacity-60 pointer-events-none hidden md:block">
-        <div className="flex flex-col items-center gap-2" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-          <span className="text-accent font-medium">{String(currentChapter).padStart(2, '0')}</span>
-          <span className="opacity-40">—</span>
+      <div className="fixed right-12 top-1/2 -translate-y-1/2 z-30 text-[10px] tracking-[0.25em] uppercase select-none opacity-50 pointer-events-none hidden md:block text-white mix-blend-difference">
+        <div className="flex flex-col items-center gap-4" style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
+          <span className="font-medium" style={{ color: accentColor }}>{String(currentChapter).padStart(2, '0')}</span>
+          <span className="opacity-30 h-8 w-[1px] bg-white"></span>
           <span>05</span>
         </div>
       </div>
 
-      {/* Section Content 0 */}
-      <div 
+      {/* Section Content 0 - HERO */}
+      <div
         style={getSectionStyles(scrollPercent, 0.00, 0.10, 0.20)}
         className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
       >
-        <div className="max-w-3xl pointer-events-auto">
-          <div className="flex items-center justify-center gap-3 text-xs tracking-[0.4em] uppercase text-accent mb-6 font-sans font-light">
-            <span className="w-8 h-px bg-accent"></span>
-            Est. 2024 · Independent Studio
+        <div className="max-w-4xl pointer-events-auto flex flex-col items-center" ref={el => sectionRefs.current[0] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
+            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+            <span style={{ color: accentColor }}>KATHAVACHAK · Storytelling Studio</span>
+            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
           </div>
-          <h1 className="font-serif font-light text-5xl md:text-8xl leading-[0.95] tracking-tight mb-7 text-ink">
-            We build<br/>worlds that <em className="text-accent italic not-italic">breathe</em>.
+          <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
+            Every Expert Has Knowledge.<br />
+            Few Become <span className="italic" style={{ color: accentColor }}>Unforgettable</span>.
           </h1>
-          <p className="max-w-[440px] mx-auto text-sm md:text-base leading-relaxed opacity-75 font-sans font-light mb-8">
-            A design and technology studio crafting immersive digital experiences at the intersection of art, code, and motion.
+          <p className="gsap-animate opacity-0 max-w-[500px] mx-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+            We help founders, CEOs and industry leaders become trusted brands through cinematic storytelling.
           </p>
-          <div className="flex justify-center gap-12 text-[10px] tracking-[0.2em] uppercase opacity-60 font-sans mt-10">
-            <span>Based in<b className="block text-ink mt-1 font-medium font-sans">Reykjavík · Lisbon</b></span>
-            <span>Working with<b className="block text-ink mt-1 font-medium font-sans">Global Brands</b></span>
+          <div className="gsap-animate opacity-0 flex justify-center gap-16 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+            <span>Strategy Before Content</span>
+            <span>Built For Long-Term Authority</span>
           </div>
         </div>
       </div>
 
-      {/* Section Content 1 */}
-      <div 
+      {/* Section Content 1 - CAMERA SCENE */}
+      <div
         style={getSectionStyles(scrollPercent, 0.20, 0.30, 0.40)}
-        className="fixed inset-0 flex items-center justify-end text-right px-[8vw] z-10 pointer-events-none"
+        className="fixed inset-0 flex items-center justify-start text-left px-[10vw] z-10 pointer-events-none"
       >
-        <div className="max-w-2xl pointer-events-auto">
-          <div className="flex items-center justify-end gap-3 text-xs tracking-[0.4em] uppercase text-accent mb-6 font-sans font-light">
-            01 · Discovery
-            <span className="w-8 h-px bg-accent"></span>
+        <div className="max-w-2xl pointer-events-auto" ref={el => sectionRefs.current[1] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-start gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
+            <span style={{ color: accentColor }}>01 • PRODUCTION</span>
+            <span className="w-12 h-[1px]" style={{ backgroundColor: accentColor }}></span>
           </div>
-          <h1 className="font-serif font-light text-5xl md:text-8xl leading-[0.95] tracking-tight mb-7 text-ink">
-            Chase the<br/><em className="text-accent italic not-italic">unknown</em>.
+          <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
+            We Don't Shoot Videos.<br />
+            We Capture <span className="italic" style={{ color: accentColor }}>Belief</span>.
           </h1>
-          <p className="max-w-[420px] ml-auto text-sm md:text-base leading-relaxed opacity-75 font-sans font-light mb-8">
-            Every great project begins with a question no one has asked yet. We follow the signal through the noise, mapping territories that don't appear on any chart.
+          <p className="gsap-animate opacity-0 max-w-[400px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+            Every frame is designed to build trust.<br />
+            People remember stories—not camera settings.
           </p>
-          <div className="flex justify-end gap-12 text-[10px] tracking-[0.2em] uppercase opacity-60 font-sans mt-10">
-            <span>Phase<b className="block text-ink mt-1 font-medium font-sans">Research & Strategy</b></span>
+          <div className="gsap-animate opacity-0 flex justify-start gap-12 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+            <span>Cinematography</span>
+            <span>Direction</span>
+            <span>Visual Identity</span>
           </div>
         </div>
       </div>
 
-      {/* Section Content 2 */}
-      <div 
+      {/* Section Content 2 - WHITEBOARD SCENE */}
+      <div
         style={getSectionStyles(scrollPercent, 0.40, 0.50, 0.60)}
-        className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
+        className="fixed inset-0 flex items-center justify-end text-right px-[10vw] z-10 pointer-events-none"
       >
-        <div className="max-w-2xl pointer-events-auto">
-          <div className="flex items-center justify-center gap-3 text-xs tracking-[0.4em] uppercase text-accent mb-6 font-sans font-light">
-            <span className="w-8 h-px bg-accent"></span>
-            02 · Ascent
-            <span className="w-8 h-px bg-accent"></span>
+        <div className="max-w-2xl pointer-events-auto flex flex-col items-end" ref={el => sectionRefs.current[2] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-end gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
+            <span className="w-12 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+            <span style={{ color: accentColor }}>02 • STRATEGY</span>
           </div>
-          <h1 className="font-serif font-light text-5xl md:text-8xl leading-[0.95] tracking-tight mb-7 text-ink">
-            Rise above<br/>the <em className="text-accent italic not-italic">horizon</em>.
+          <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
+            Great Content<br />
+            Starts With<br />
+            Great <span className="italic" style={{ color: accentColor }}>Strategy</span>.
           </h1>
-          <p className="max-w-[420px] mx-auto text-sm md:text-base leading-relaxed opacity-75 font-sans font-light mb-8">
-            Perspective changes everything. From altitude, patterns emerge — connections invisible from the ground become the architecture of the next idea.
+          <p className="gsap-animate opacity-0 max-w-[400px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white text-right">
+            Before filming begins,<br />
+            we discover your positioning, audience,<br />
+            and long-term content roadmap.
           </p>
-          <div className="flex justify-center gap-12 text-[10px] tracking-[0.2em] uppercase opacity-60 font-sans mt-10">
-            <span>Phase<b className="block text-ink mt-1 font-medium font-sans">Concept & Direction</b></span>
+          <div className="gsap-animate opacity-0 flex justify-end gap-12 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+            <span>Research</span>
+            <span>Positioning</span>
+            <span>Growth Strategy</span>
           </div>
         </div>
       </div>
 
-      {/* Section Content 3 */}
-      <div 
+      {/* Section Content 3 - NOTEBOOK SCENE */}
+      <div
         style={getSectionStyles(scrollPercent, 0.60, 0.70, 0.80)}
-        className="fixed inset-0 flex items-center justify-start text-left px-[8vw] z-10 pointer-events-none"
+        className="fixed inset-0 flex items-center justify-start text-left px-[10vw] z-10 pointer-events-none"
       >
-        <div className="max-w-2xl pointer-events-auto">
-          <div className="flex items-center justify-start gap-3 text-xs tracking-[0.4em] uppercase text-accent mb-6 font-sans font-light">
-            <span className="w-8 h-px bg-accent"></span>
-            03 · Reflection
+        <div className="max-w-2xl pointer-events-auto" ref={el => sectionRefs.current[3] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-start gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
+            <span style={{ color: accentColor }}>03 • SCRIPTING</span>
+            <span className="w-12 h-[1px]" style={{ backgroundColor: accentColor }}></span>
           </div>
-          <h1 className="font-serif font-light text-5xl md:text-8xl leading-[0.95] tracking-tight mb-7 text-ink">
-            Look <em className="text-accent italic not-italic">within</em><br/>the depths.
+          <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
+            Every Viral Idea<br />
+            Begins With<br />
+            A <span className="italic" style={{ color: accentColor }}>Blank Page</span>.
           </h1>
-          <p className="max-w-[420px] text-sm md:text-base leading-relaxed opacity-75 font-sans font-light mb-8">
-            The quietest moments carry the loudest truths. We design for stillness as much as motion — spaces where meaning has room to arrive.
+          <p className="gsap-animate opacity-0 max-w-[400px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+            Hooks. Stories. Scripts.<br />
+            Every word is written with intention before the camera rolls.
           </p>
-          <div className="flex justify-start gap-12 text-[10px] tracking-[0.2em] uppercase opacity-60 font-sans mt-10">
-            <span>Phase<b className="block text-ink mt-1 font-medium font-sans">Craft & Detail</b></span>
+          <div className="gsap-animate opacity-0 flex justify-start gap-12 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+            <span>Messaging</span>
+            <span>Writing</span>
+            <span>Creative Direction</span>
           </div>
         </div>
       </div>
 
-      {/* Section Content 4 */}
-      <div 
+      {/* Section Content 4 - EDITING SCENE */}
+      <div
         style={getSectionStyles(scrollPercent, 0.80, 0.90, 1.00)}
         className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
       >
-        <div className="max-w-2xl pointer-events-auto">
-          <div className="flex items-center justify-center gap-3 text-xs tracking-[0.4em] uppercase text-accent mb-6 font-sans font-light">
-            <span className="w-8 h-px bg-accent"></span>
-            04 · Return
-            <span className="w-8 h-px bg-accent"></span>
+        <div className="max-w-3xl pointer-events-auto flex flex-col items-center" ref={el => sectionRefs.current[4] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
+            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+            <span style={{ color: accentColor }}>04 • POST PRODUCTION</span>
+            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
           </div>
-          <h1 className="font-serif font-light text-5xl md:text-8xl leading-[0.95] tracking-tight mb-7 text-ink">
-            Every end is<br/>a new <em className="text-accent italic not-italic">beginning</em>.
+          <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
+            This Is Where<br />
+            Stories Become <span className="italic" style={{ color: accentColor }}>Addictive</span>.
           </h1>
-          <p className="max-w-[420px] mx-auto text-sm md:text-base leading-relaxed opacity-75 font-sans font-light mb-8">
-            The journey loops. What you've seen is only the surface — scroll again, look closer, and the world reveals something it hid the first time.
+          <p className="gsap-animate opacity-0 max-w-[400px] mx-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+            Editing controls emotion.<br />
+            Every cut, every sound, every transition is crafted to hold attention.
           </p>
-          <div className="flex justify-center gap-12 text-[10px] tracking-[0.2em] uppercase opacity-60 font-sans mt-10">
-            <span>Let's make something<b className="block text-accent hover:text-ink mt-1 font-medium font-sans cursor-pointer transition-colors">hello@horizon.studio</b></span>
+          <div className="gsap-animate opacity-0 flex justify-center gap-12 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+            <span>Editing</span>
+            <span>Motion</span>
+            <span>Sound Design</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section Content 5 - FINAL CHARACTER */}
+      <div
+        style={getSectionStyles(scrollPercent, 0.95, 1.00, 1.00)}
+        className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
+      >
+        <div className="max-w-3xl pointer-events-auto flex flex-col items-center" ref={el => sectionRefs.current[5] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
+            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+            <span style={{ color: accentColor }}>YOUR STORY STARTS HERE</span>
+            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+          </div>
+          <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
+            Ready To Become<br />
+            The Brand<br />
+            People <span className="italic" style={{ color: accentColor }}>Remember</span>?
+          </h1>
+          <p className="gsap-animate opacity-0 max-w-[450px] mx-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+            Let's build a personal brand that creates trust before you even enter the room.
+          </p>
+          <div className="gsap-animate opacity-0">
+            <a
+              href="#"
+              className="inline-block text-[10px] tracking-[0.2em] uppercase font-sans py-4 px-8 border border-white/20 rounded-full hover:bg-white hover:text-black cursor-pointer transition-all duration-300 text-white select-none"
+            >
+              Book a Discovery Call &rarr;
+            </a>
           </div>
         </div>
       </div>
 
       {/* Scroll Hint */}
-      <div 
+      <div
         style={{ opacity: scrollHintOpacity, transition: 'opacity 0.4s ease' }}
-        className="fixed bottom-9 left-1/2 -translate-x-1/2 z-35 flex flex-col items-center gap-3 font-sans text-[10px] tracking-[0.35em] uppercase opacity-70 pointer-events-none select-none"
+        className="fixed bottom-12 left-1/2 -translate-x-1/2 z-35 flex flex-col items-center gap-4 font-sans text-[9px] tracking-[0.35em] uppercase opacity-50 pointer-events-none select-none text-white mix-blend-difference"
       >
         <span>Scroll</span>
-        <div className="w-[1px] h-10 bg-linear-to-b from-transparent to-ink animate-[scrollLine_2s_ease-in-out_infinite]" />
+        <div className="w-[1px] h-12 bg-linear-to-b from-transparent to-white/70 animate-[scrollLine_2s_ease-in-out_infinite]" />
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-8 left-[2.5rem] z-30 text-[10px] tracking-[0.2em] uppercase opacity-50 select-none pointer-events-none hidden md:block">
-        © Horizon Studio — MMXXV
+      <div className="fixed bottom-10 left-[3rem] z-30 text-[9px] tracking-[0.2em] uppercase opacity-40 select-none pointer-events-none hidden md:block text-white mix-blend-difference">
+        © KATHAVACHAK — MMXXV
       </div>
 
       {/* Keyframe scroll line animation */}
       <style>{`
         @keyframes scrollLine {
-          0%, 100% { transform: scaleY(0.3); transform-origin: top; }
+          0%, 100% { transform: scaleY(0.2); transform-origin: top; }
           50% { transform: scaleY(1); transform-origin: top; }
-        }
-        .animate-pulse-slow {
-          animation: pulseSlow 3s ease-in-out infinite;
-        }
-        @keyframes pulseSlow {
-          0%, 100% { opacity: 0.3; transform: scale(0.95); }
-          50% { opacity: 0.7; transform: scale(1.05); }
         }
       `}</style>
     </>
