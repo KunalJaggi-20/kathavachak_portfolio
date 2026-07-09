@@ -50,14 +50,24 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
     // triggered based on scrollPercent active sections.
     // Since getSectionStyles handles overall section opacity/translate,
     // we use GSAP to animate internal text elements once a section passes a threshold.
+    const activeRange = [
+      { start: 0.00, end: 0.20 }, // 0: Hero
+      { start: 0.20, end: 0.40 }, // 1: Production
+      { start: 0.40, end: 0.60 }, // 2: Strategy
+      { start: 0.60, end: 0.80 }, // 3: Scripting
+      { start: 0.80, end: 0.95 }, // 4: Post Production
+      { start: 0.95, end: 1.01 }, // 5: Final CTA
+    ];
+
     sectionRefs.current.forEach((section, index) => {
       if (!section) return;
 
       const elements = section.querySelectorAll('.gsap-animate');
-      const startTrigger = index * 0.2; // roughly matches sections (0, 0.2, 0.4, 0.6, 0.8)
+      const range = activeRange[index] || { start: index * 0.2, end: index * 0.2 + 0.2 };
+      const isActive = scrollPercent >= range.start && scrollPercent < range.end;
 
       // If we crossed into this section's peak visibility
-      if (scrollPercent >= startTrigger && scrollPercent < startTrigger + 0.2) {
+      if (isActive) {
         if (!section.classList.contains('is-animated')) {
           section.classList.add('is-animated');
           gsap.fromTo(elements,
@@ -140,11 +150,10 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
       {/* Section Content 0 - HERO */}
       <div
         style={getSectionStyles(scrollPercent, 0.00, 0.10, 0.20)}
-        className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
+        className="fixed inset-0 flex items-center justify-start text-left px-[10vw] z-10 pointer-events-none"
       >
-        <div className="max-w-4xl pointer-events-auto flex flex-col items-center" ref={el => sectionRefs.current[0] = el}>
-          <div className="gsap-animate opacity-0 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
-            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+        <div className="max-w-[46rem] pointer-events-auto flex flex-col items-start" ref={el => sectionRefs.current[0] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-start gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
             <span style={{ color: accentColor }}>KATHAVACHAK · Storytelling Studio</span>
             <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
           </div>
@@ -152,10 +161,10 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
             Every Expert Has Knowledge.<br />
             Few Become <span className="italic" style={{ color: accentColor }}>Unforgettable</span>.
           </h1>
-          <p className="gsap-animate opacity-0 max-w-[500px] mx-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+          <p className="gsap-animate opacity-0 max-w-[500px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
             We help founders, CEOs and industry leaders become trusted brands through cinematic storytelling.
           </p>
-          <div className="gsap-animate opacity-0 flex justify-center gap-16 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+          <div className="gsap-animate opacity-0 flex justify-start gap-16 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
             <span>Strategy Before Content</span>
             <span>Built For Long-Term Authority</span>
           </div>
@@ -219,23 +228,23 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
       {/* Section Content 3 - NOTEBOOK SCENE */}
       <div
         style={getSectionStyles(scrollPercent, 0.60, 0.70, 0.80)}
-        className="fixed inset-0 flex items-center justify-start text-left px-[10vw] z-10 pointer-events-none"
+        className="fixed inset-0 flex items-center justify-end text-right px-[10vw] z-10 pointer-events-none"
       >
-        <div className="max-w-2xl pointer-events-auto" ref={el => sectionRefs.current[3] = el}>
-          <div className="gsap-animate opacity-0 flex items-center justify-start gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
-            <span style={{ color: accentColor }}>03 • SCRIPTING</span>
+        <div className="max-w-2xl pointer-events-auto flex flex-col items-end" ref={el => sectionRefs.current[3] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-end gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
             <span className="w-12 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+            <span style={{ color: accentColor }}>03 • SCRIPTING</span>
           </div>
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             Every Viral Idea<br />
             Begins With<br />
             A <span className="italic" style={{ color: accentColor }}>Blank Page</span>.
           </h1>
-          <p className="gsap-animate opacity-0 max-w-[400px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+          <p className="gsap-animate opacity-0 max-w-[400px] ml-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white text-right">
             Hooks. Stories. Scripts.<br />
             Every word is written with intention before the camera rolls.
           </p>
-          <div className="gsap-animate opacity-0 flex justify-start gap-12 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
+          <div className="gsap-animate opacity-0 flex justify-end gap-12 text-[10px] tracking-[0.2em] uppercase opacity-50 font-sans text-white">
             <span>Messaging</span>
             <span>Writing</span>
             <span>Creative Direction</span>
@@ -273,11 +282,10 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
       {/* Section Content 5 - FINAL CHARACTER */}
       <div
         style={getSectionStyles(scrollPercent, 0.95, 1.00, 1.00)}
-        className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
+        className="fixed inset-0 flex items-center justify-start text-left px-[10vw] z-10 pointer-events-none"
       >
-        <div className="max-w-3xl pointer-events-auto flex flex-col items-center" ref={el => sectionRefs.current[5] = el}>
-          <div className="gsap-animate opacity-0 flex items-center justify-center gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
-            <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
+        <div className="max-w-3xl pointer-events-auto flex flex-col items-start" ref={el => sectionRefs.current[5] = el}>
+          <div className="gsap-animate opacity-0 flex items-center justify-start gap-4 text-[10px] tracking-[0.3em] uppercase mb-10 font-sans text-white">
             <span style={{ color: accentColor }}>YOUR STORY STARTS HERE</span>
             <span className="w-8 h-[1px]" style={{ backgroundColor: accentColor }}></span>
           </div>
@@ -286,7 +294,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
             The Brand<br />
             People <span className="italic" style={{ color: accentColor }}>Remember</span>?
           </h1>
-          <p className="gsap-animate opacity-0 max-w-[450px] mx-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
+          <p className="gsap-animate opacity-0 max-w-[450px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white text-left">
             Let's build a personal brand that creates trust before you even enter the room.
           </p>
           <div className="gsap-animate opacity-0">
