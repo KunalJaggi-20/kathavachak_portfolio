@@ -69,6 +69,15 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
   // Scroll Hint fade out
   const scrollHintOpacity = Math.max(0, 1 - (scrollPercent / 0.05));
 
+  // Smooth scroll helper to navigate to specific sections
+  const scrollToPercent = (p) => {
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({
+      top: p * maxScroll,
+      behavior: 'smooth'
+    });
+  };
+
   // Determine current chapter (1 to 5)
   const currentChapter = Math.min(5, Math.floor(scrollPercent * 5) + 1);
 
@@ -191,13 +200,16 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 p-8 md:px-12 md:py-8 flex justify-between items-center z-40 select-none pointer-events-auto mix-blend-difference">
-        <div className="logo font-sans text-[12px] font-medium tracking-[0.2em] uppercase text-white">
+        <div 
+          onClick={() => scrollToPercent(0.0)} 
+          className="logo font-sans text-[12px] font-medium tracking-[0.2em] uppercase text-white cursor-pointer hover:opacity-80 transition-opacity"
+        >
           KATHAVACHAK<span style={{ color: accentColor }}>.</span>
         </div>
         <ul className="hidden md:flex gap-12 text-[10px] tracking-[0.15em] uppercase font-sans text-white">
-          <li className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Work</li>
-          <li className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Studio</li>
-          <li className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Contact</li>
+          <li onClick={() => scrollToPercent(0.30)} className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Work</li>
+          <li onClick={() => scrollToPercent(0.50)} className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Studio</li>
+          <li onClick={() => scrollToPercent(1.00)} className="opacity-60 hover:opacity-100 cursor-pointer transition-opacity">Contact</li>
         </ul>
         <button
           onClick={() => setIsMuted(!isMuted)}
@@ -323,7 +335,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
 
       {/* Section Content 4 - EDITING SCENE */}
       <div
-        style={getSectionStyles(scrollPercent, 0.80, 0.90, 1.00)}
+        style={getSectionStyles(scrollPercent, 0.80, 0.90, 0.95)}
         className="fixed inset-0 flex items-center justify-center text-center px-[8vw] z-10 pointer-events-none"
       >
         <div className="max-w-3xl pointer-events-auto flex flex-col items-center" ref={el => sectionRefs.current[4] = el}>
