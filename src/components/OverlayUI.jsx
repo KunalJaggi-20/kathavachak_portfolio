@@ -228,7 +228,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           </div>
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             Every Expert Has Knowledge.<br />
-            Few Become <span className="italic" style={{ color: accentColor }}>Unforgettable</span>.
+            Few Become <span className="italic cinematic-highlight" style={{ color: accentColor }}>Unforgettable</span>.
           </h1>
           <p className="gsap-animate opacity-0 max-w-[500px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
             We help founders, CEOs and industry leaders become trusted brands through cinematic storytelling.
@@ -252,7 +252,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           </div>
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             We Don't Shoot Videos.<br />
-            We Capture <span className="italic" style={{ color: accentColor }}>Belief</span>.
+            We Capture <span className="italic cinematic-highlight" style={{ color: accentColor }}>Belief</span>.
           </h1>
           <p className="gsap-animate opacity-0 max-w-[400px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
             Every frame is designed to build trust.<br />
@@ -279,7 +279,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             Great Content<br />
             Starts With<br />
-            Great <span className="italic" style={{ color: accentColor }}>Strategy</span>.
+            Great <span className="italic cinematic-highlight" style={{ color: accentColor }}>Strategy</span>.
           </h1>
           <p className="gsap-animate opacity-0 max-w-[400px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white text-right">
             Before filming begins,<br />
@@ -307,7 +307,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             Every Viral Idea<br />
             Begins With<br />
-            A <span className="italic" style={{ color: accentColor }}>Blank Page</span>.
+            A <span className="italic cinematic-highlight" style={{ color: accentColor }}>Blank Page</span>.
           </h1>
           <p className="gsap-animate opacity-0 max-w-[400px] ml-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white text-right">
             Hooks. Stories. Scripts.<br />
@@ -334,7 +334,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           </div>
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             This Is Where<br />
-            Stories Become <span className="italic" style={{ color: accentColor }}>Addictive</span>.
+            Stories Become <span className="italic cinematic-highlight" style={{ color: accentColor }}>Addictive</span>.
           </h1>
           <p className="gsap-animate opacity-0 max-w-[400px] mx-auto text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white">
             Editing controls emotion.<br />
@@ -361,7 +361,7 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
           <h1 className="gsap-animate opacity-0 font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight mb-10 text-white font-light">
             Ready To Become<br />
             The Brand<br />
-            People <span className="italic" style={{ color: accentColor }}>Remember</span>?
+            People <span className="italic cinematic-highlight" style={{ color: accentColor }}>Remember</span>?
           </h1>
           <p className="gsap-animate opacity-0 max-w-[450px] text-sm md:text-base leading-relaxed opacity-70 font-sans font-light mb-16 text-white text-left">
             Let's build a personal brand that creates trust before you even enter the room.
@@ -407,6 +407,39 @@ export default function OverlayUI({ scrollPercent, isMuted, setIsMuted }) {
         @keyframes pulseSlow {
           0%, 100% { opacity: 0.25; transform: scale(0.98); }
           50% { opacity: 0.45; transform: scale(1.02); }
+        }
+        .cinematic-highlight {
+          position: relative;
+          display: inline-block;
+          text-shadow: 0 0 10px rgba(217, 107, 58, 0);
+          transition: text-shadow 1s ease-out;
+        }
+        .is-animated .cinematic-highlight {
+          text-shadow: 0 0 15px rgba(217, 107, 58, 0.6);
+          animation: highlightGlow 3s ease-in-out infinite alternate;
+        }
+        .cinematic-highlight::after {
+          content: '';
+          position: absolute;
+          bottom: -4px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #D96B3A, #ff8855);
+          box-shadow: 0 0 8px #D96B3A;
+          transition: width 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+          transition-delay: 0.4s;
+        }
+        .is-animated .cinematic-highlight::after {
+          width: 100%;
+        }
+        @keyframes highlightGlow {
+          0% {
+            text-shadow: 0 0 8px rgba(217, 107, 58, 0.3);
+          }
+          100% {
+            text-shadow: 0 0 18px rgba(217, 107, 58, 0.85);
+          }
         }
       `}</style>
     </>
