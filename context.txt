@@ -1,0 +1,753 @@
+# Rebuild this UI draft inside my project
+
+The block below is a self-contained HTML+Tailwind sketch. Treat it as a VISUAL reference for layout, spacing, hierarchy and states — not code to paste.
+
+STEP 1 — Inspect my project first and figure out its stack (do not assume it):
+- Framework & language: read package.json / tsconfig (React, Next, Vue, Svelte, Solid, Astro, …; TypeScript or JavaScript).
+- Styling system: Tailwind (and which version, via components.json / tailwind config), or CSS Modules, styled-components, vanilla-extract, Emotion, Sass, or plain CSS.
+- Component / design system: search the repo for an existing UI kit (shadcn/ui, Radix, MUI, Chakra, Ant, Mantine, or a local components/ui folder) and REUSE its primitives instead of inventing new ones.
+- Conventions: path aliases, folder layout, design tokens (theme file or CSS variables), and formatting/lint rules.
+
+STEP 2 — Recreate the sketch using MY stack and MY existing components. Preserve the layout, spacing and visual hierarchy; map the raw HTML onto my own components and design tokens; do not introduce a new UI library or hardcoded colors when my project already has equivalents.
+
+## Constraints
+
+- Match my detected framework, styling system and component library — reuse what exists, don't reinvent it
+- Use my design tokens / theme, not hardcoded hex colors
+- Only add a dependency or global config if my project genuinely lacks an equivalent, and call it out explicitly
+- Real content, no lorem ipsum; keep it accessible
+
+<reference_sketch>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HORIZON — A Scroll Odyssey</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;700;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #f5f1e8;
+    --accent: #ff5b2e;
+    --accent2: #6ee7ff;
+  }
+  * { -webkit-font-smoothing: antialiased; }
+  html, body {
+    background: #05060a;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+  body { cursor: none; }
+  a, button { cursor: none; }
+
+  #canvas-wrap {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(ellipse at 50% 80%, #0b1026 0%, #05060a 60%, #000 100%);
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* Film grain */
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 4;
+    opacity: 0.08; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
+  }
+
+  /* Vignette */
+  .vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 3;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+  }
+
+  /* Intro black screen */
+  #intro {
+    position: fixed; inset: 0; z-index: 50;
+    background: #000;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease;
+  }
+  #intro .pulse {
+    position: absolute;
+    width: 80px; height: 80px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    animation: pulse 2.4s ease-out infinite;
+  }
+  #intro .pulse.delay { animation-delay: 1.2s; }
+  @keyframes pulse {
+    0% { transform: scale(0.5); opacity: 0.9; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+
+  /* Nav */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 1.75rem 2.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 40; mix-blend-mode: difference;
+  }
+  .nav .logo {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem; letter-spacing: 0.02em;
+  }
+  .nav ul { display: flex; gap: 2.25rem; font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; }
+  .nav ul li { opacity: 0.75; transition: opacity 0.2s; }
+  .nav ul li:hover { opacity: 1; }
+
+  /* Progress bar */
+  .progress {
+    position: fixed; top: 0; left: 0; height: 2px; width: 100%;
+    background: linear-gradient(90deg, #ff5b2e, #6ee7ff);
+    transform-origin: left; transform: scaleX(0);
+    z-index: 45;
+  }
+
+  /* Section counter */
+  .counter {
+    position: fixed; right: 2.5rem; top: 50%; transform: translateY(-50%);
+    z-index: 30; font-size: 0.7rem; letter-spacing: 0.3em;
+    writing-mode: vertical-rl; text-orientation: mixed;
+    opacity: 0.6;
+  }
+  .counter .num { color: var(--accent); font-weight: 500; }
+
+  /* Section texts */
+  .section-text {
+    position: fixed; inset: 0;
+    display: flex; align-items: center;
+    padding: 0 8vw;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 10;
+  }
+  .section-text .eyebrow {
+    font-size: 0.72rem; letter-spacing: 0.4em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-text .eyebrow::before {
+    content: ''; width: 32px; height: 1px; background: var(--accent);
+  }
+  .section-text h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(3rem, 9vw, 9rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.75rem;
+  }
+  .section-text h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .section-text p {
+    max-width: 420px;
+    font-size: 1rem; line-height: 1.6;
+    opacity: 0.75;
+    font-weight: 300;
+  }
+  .section-text .meta {
+    margin-top: 2.5rem;
+    display: flex; gap: 3rem;
+    font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .section-text .meta span b { display: block; color: var(--ink); font-weight: 500; margin-top: 0.35rem; font-size: 0.85rem; letter-spacing: 0.05em; }
+
+  /* Alignment variants */
+  .align-left { justify-content: flex-start; }
+  .align-right { justify-content: flex-end; text-align: right; }
+  .align-right .eyebrow { justify-content: flex-end; }
+  .align-right .eyebrow::before { display: none; }
+  .align-right .eyebrow::after { content: ''; width: 32px; height: 1px; background: var(--accent); }
+  .align-right .meta { justify-content: flex-end; }
+  .align-center { justify-content: center; text-align: center; flex-direction: column; align-items: center; }
+  .align-center .eyebrow::before { display: none; }
+  .align-center .meta { justify-content: center; }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: fixed; bottom: 2.25rem; left: 50%;
+    transform: translateX(-50%);
+    z-index: 35;
+    font-size: 0.68rem; letter-spacing: 0.35em; text-transform: uppercase;
+    opacity: 0.7;
+    display: flex; flex-direction: column; align-items: center; gap: 0.85rem;
+    transition: opacity 0.4s;
+  }
+  .scroll-hint .line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--ink));
+    animation: scrollLine 2s ease-in-out infinite;
+  }
+  @keyframes scrollLine {
+    0%, 100% { transform: scaleY(0.3); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed; top: 0; left: 0;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: difference;
+    transition: transform 0.15s ease;
+  }
+  .cursor-ring {
+    position: fixed; top: 0; left: 0;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99;
+    transform: translate(-50%, -50%);
+    transition: transform 0.25s ease, width 0.25s, height 0.25s;
+  }
+
+  /* Scroll container */
+  #scroll-container {
+    position: relative;
+    height: 500vh;
+    z-index: 1;
+  }
+
+  /* Footer */
+  .footer {
+    position: fixed; bottom: 2rem; left: 2.5rem;
+    z-index: 30; font-size: 0.68rem; letter-spacing: 0.2em;
+    text-transform: uppercase; opacity: 0.5;
+  }
+
+  @media (max-width: 768px) {
+    .nav { padding: 1.25rem 1.5rem; }
+    .nav ul { display: none; }
+    .section-text { padding: 0 1.5rem; align-items: flex-end !important; padding-bottom: 6rem; }
+    .section-text h1 { font-size: clamp(2.5rem, 14vw, 4.5rem); }
+    .counter { display: none; }
+    .footer { display: none; }
+    body { cursor: auto; }
+    .cursor, .cursor-ring { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Intro black screen -->
+<div id="intro">
+  <div class="pulse"></div>
+  <div class="pulse delay"></div>
+  <div class="text-center relative z-10">
+    <div class="text-xs tracking-[0.4em] uppercase opacity-60 mb-6">Chapter I · The Odyssey</div>
+    <div class="font-serif text-5xl md:text-7xl italic mb-10" style="font-family:'Instrument Serif',serif;">Scroll to View</div>
+    <div class="flex items-center justify-center gap-3 text-xs tracking-[0.3em] uppercase opacity-70">
+      <span class="w-8 h-px bg-white/50"></span>
+      Begin the journey
+      <span class="w-8 h-px bg-white/50"></span>
+    </div>
+  </div>
+</div>
+
+<!-- 3D Canvas -->
+<div id="canvas-wrap"></div>
+
+<!-- Overlays -->
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="progress" id="progress"></div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="logo">Horizon<span style="color:var(--accent)">.</span></div>
+  <ul>
+    <li>Work</li>
+    <li>Studio</li>
+    <li>Journal</li>
+    <li>Contact</li>
+  </ul>
+</nav>
+
+<!-- Counter -->
+<div class="counter">
+  <span class="num" id="counterNum">01</span>
+  <span class="mx-2">—</span>
+  <span>05</span>
+</div>
+
+<!-- Section texts -->
+<div class="section-text align-center" id="sec0">
+  <div>
+    <div class="eyebrow">Est. 2024 · Independent Studio</div>
+    <h1>We build<br/>worlds that <em>breathe</em>.</h1>
+    <p>A design and technology studio crafting immersive digital experiences at the intersection of art, code, and motion.</p>
+    <div class="meta">
+      <span>Based in<b>Reykjavík · Lisbon</b></span>
+      <span>Working with<b>Global Brands</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="section-text align-right" id="sec1">
+  <div>
+    <div class="eyebrow">01 · Discovery</div>
+    <h1>Chase the<br/><em>unknown</em>.</h1>
+    <p>Every great project begins with a question no one has asked yet. We follow the signal through the noise, mapping territories that don't appear on any chart.</p>
+    <div class="meta">
+      <span>Phase<b>Research & Strategy</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="section-text align-center" id="sec2">
+  <div>
+    <div class="eyebrow">02 · Ascent</div>
+    <h1>Rise above<br/>the <em>horizon</em>.</h1>
+    <p>Perspective changes everything. From altitude, patterns emerge — connections invisible from the ground become the architecture of the next idea.</p>
+    <div class="meta">
+      <span>Phase<b>Concept & Direction</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="section-text align-left" id="sec3">
+  <div>
+    <div class="eyebrow">03 · Reflection</div>
+    <h1>Look <em>within</em><br/>the depths.</h1>
+    <p>The quietest moments carry the loudest truths. We design for stillness as much as motion — spaces where meaning has room to arrive.</p>
+    <div class="meta">
+      <span>Phase<b>Craft & Detail</b></span>
+    </div>
+  </div>
+</div>
+
+<div class="section-text align-center" id="sec4">
+  <div>
+    <div class="eyebrow">04 · Return</div>
+    <h1>Every end is<br/>a new <em>beginning</em>.</h1>
+    <p>The journey loops. What you've seen is only the surface — scroll again, look closer, and the world reveals something it hid the first time.</p>
+    <div class="meta">
+      <span>Let's make something<b>hello@horizon.studio</b></span>
+    </div>
+  </div>
+</div>
+
+<!-- Scroll hint -->
+<div class="scroll-hint" id="scrollHint">
+  <span>Scroll</span>
+  <div class="line"></div>
+</div>
+
+<!-- Footer -->
+<div class="footer">© Horizon Studio — MMXXV</div>
+
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- Scroll container (tall, drives the animation) -->
+<div id="scroll-container"></div>
+
+<script>
+// ============================================================
+// Custom cursor
+// ============================================================
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursorRing');
+let mx = window.innerWidth/2, my = window.innerHeight/2;
+let rx = mx, ry = my;
+window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx+'px'; cursor.style.top = my+'px'; });
+function animateCursor(){
+  rx += (mx - rx) * 0.15;
+  ry += (my - ry) * 0.15;
+  cursorRing.style.left = rx+'px';
+  cursorRing.style.top = ry+'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// ============================================================
+// Three.js Scene
+// ============================================================
+const wrap = document.getElementById('canvas-wrap');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05060a, 0.0018);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 3000);
+camera.position.set(0, 20, 120);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+wrap.appendChild(renderer.domElement);
+
+// Lights
+const ambient = new THREE.AmbientLight(0x404060, 0.6);
+scene.add(ambient);
+const keyLight = new THREE.PointLight(0xff5b2e, 2, 400);
+keyLight.position.set(50, 40, 60);
+scene.add(keyLight);
+const fillLight = new THREE.PointLight(0x6ee7ff, 1.5, 400);
+fillLight.position.set(-60, 20, 40);
+scene.add(fillLight);
+const rimLight = new THREE.PointLight(0xffffff, 0.8, 600);
+rimLight.position.set(0, 80, -50);
+scene.add(rimLight);
+
+// ---- Starfield ----
+function makeStars(count, radius, size, color){
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  const cols = new Float32Array(count*3);
+  for (let i=0;i<count;i++){
+    const r = radius * (0.4 + Math.random()*0.6);
+    const t = Math.random()*Math.PI*2;
+    const p = Math.acos(Math.random()*2-1);
+    pos[i*3] = r*Math.sin(p)*Math.cos(t);
+    pos[i*3+1] = r*Math.sin(p)*Math.sin(t);
+    pos[i*3+2] = r*Math.cos(p);
+    const c = new THREE.Color(color).offsetHSL((Math.random()-0.5)*0.05, 0, (Math.random()-0.5)*0.2);
+    cols[i*3]=c.r; cols[i*3+1]=c.g; cols[i*3+2]=c.b;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color', new THREE.BufferAttribute(cols,3));
+  const mat = new THREE.PointsMaterial({ size, vertexColors:true, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true });
+  return new THREE.Points(geo, mat);
+}
+const stars1 = makeStars(2500, 900, 1.4, 0xffffff);
+const stars2 = makeStars(1200, 700, 2.2, 0xffc9a8);
+const stars3 = makeStars(800, 1100, 0.9, 0xb8d4ff);
+scene.add(stars1, stars2, stars3);
+
+// ---- Nebula backdrop (shader plane) ----
+const nebulaGeo = new THREE.PlaneGeometry(2000, 1000, 1, 1);
+const nebulaMat = new THREE.ShaderMaterial({
+  uniforms: {
+    time: { value: 0 },
+    c1: { value: new THREE.Color(0x3a1155) },
+    c2: { value: new THREE.Color(0xff5b2e) },
+    c3: { value: new THREE.Color(0x0a2a66) }
+  },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float time;
+    uniform vec3 c1,c2,c3;
+    float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+    float noise(vec2 p){
+      vec2 i=floor(p), f=fract(p);
+      float a=hash(i), b=hash(i+vec2(1,0)), c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
+      vec2 u=f*f*(3.0-2.0*f);
+      return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;
+    }
+    float fbm(vec2 p){ float v=0.0; float a=0.5; for(int i=0;i<5;i++){ v+=a*noise(p); p*=2.0; a*=0.5;} return v; }
+    void main(){
+      vec2 uv=vUv-0.5;
+      float n = fbm(uv*3.0 + time*0.05);
+      float n2 = fbm(uv*5.0 - time*0.03 + 10.0);
+      vec3 col = mix(c1, c2, smoothstep(0.3,0.7,n));
+      col = mix(col, c3, smoothstep(0.4,0.8,n2)*0.6);
+      float vign = smoothstep(0.9, 0.2, length(uv));
+      gl_FragColor = vec4(col * vign, vign*0.55);
+    }
+  `,
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+});
+const nebula = new THREE.Mesh(nebulaGeo, nebulaMat);
+nebula.position.set(0, 40, -400);
+scene.add(nebula);
+
+// ---- Mountains (silhouette layers) ----
+function makeMountain(distance, height, color, opacity, seed){
+  const segments = 80;
+  const shape = new THREE.Shape();
+  const w = 1400;
+  shape.moveTo(-w/2, -200);
+  for (let i=0;i<=segments;i++){
+    const x = -w/2 + (i/segments)*w;
+    const y = Math.sin(i*0.18 + seed)*height*0.6 + Math.sin(i*0.07 + seed*2)*height + Math.sin(i*0.4 + seed*3)*height*0.15 - 40;
+    shape.lineTo(x, y);
+  }
+  shape.lineTo(w/2, -200);
+  shape.lineTo(-w/2, -200);
+  const geo = new THREE.ShapeGeometry(shape);
+  const mat = new THREE.MeshBasicMaterial({ color, transparent:true, opacity, side:THREE.DoubleSide });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(0, -20, distance);
+  return m;
+}
+const mountains = [
+  makeMountain(-250, 90, 0x0a1028, 1.0, 1.3),
+  makeMountain(-200, 70, 0x121a3a, 0.95, 2.7),
+  makeMountain(-150, 55, 0x1a2550, 0.9, 4.1),
+  makeMountain(-100, 40, 0x283668, 0.85, 5.5)
+];
+mountains.forEach(m => scene.add(m));
+
+// ---- Ground mist plane ----
+const mistGeo = new THREE.PlaneGeometry(2000, 600, 1, 1);
+const mistMat = new THREE.ShaderMaterial({
+  uniforms: { time: { value: 0 } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `
+    varying vec2 vUv; uniform float time;
+    void main(){
+      float d = length(vUv - vec2(0.5, 0.0));
+      float a = smoothstep(0.8, 0.0, d) * 0.4;
+      a *= 0.6 + 0.4*sin(time*0.3 + vUv.x*10.0);
+      vec3 c = mix(vec3(0.4,0.2,0.5), vec3(0.2,0.4,0.7), vUv.x);
+      gl_FragColor = vec4(c, a);
+    }
+  `,
+  transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide
+});
+const mist = new THREE.Mesh(mistGeo, mistMat);
+mist.rotation.x = -Math.PI/2;
+mist.position.set(0, -60, 0);
+scene.add(mist);
+
+// ---- Focal object 1: Right orb (icosahedron + glow) ----
+const rightGroup = new THREE.Group();
+rightGroup.position.set(90, 5, -10);
+
+const orbCoreGeo = new THREE.IcosahedronGeometry(6, 1);
+const orbCoreMat = new THREE.MeshStandardMaterial({ color: 0xff5b2e, emissive: 0xff3300, emissiveIntensity: 1.5, metalness: 0.6, roughness: 0.2, flatShading: true });
+const orbCore = new THREE.Mesh(orbCoreGeo, orbCoreMat);
+rightGroup.add(orbCore);
+
+const orbWireGeo = new THREE.IcosahedronGeometry(8.5, 1);
+const orbWireMat = new THREE.MeshBasicMaterial({ color: 0xff8855, wireframe: true, transparent: true, opacity: 0.5 });
+const orbWire = new THREE.Mesh(orbWireGeo, orbWireMat);
+rightGroup.add(orbWire);
+
+const orbRingGeo = new THREE.TorusGeometry(12, 0.15, 16, 100);
+const orbRingMat = new THREE.MeshBasicMaterial({ color: 0xffaa77, transparent: true, opacity: 0.7 });
+const orbRing = new THREE.Mesh(orbRingGeo, orbRingMat);
+orbRing.rotation.x = Math.PI/2.5;
+rightGroup.add(orbRing);
+
+const orbRing2 = new THREE.Mesh(new THREE.TorusGeometry(15, 0.1, 16, 100), new THREE.MeshBasicMaterial({ color: 0xff5b2e, transparent: true, opacity: 0.5 }));
+orbRing2.rotation.x = Math.PI/1.8; orbRing2.rotation.y = Math.PI/4;
+rightGroup.add(orbRing2);
+
+scene.add(rightGroup);
+
+// ---- Focal object 2: Center top structure (torus knot) ----
+const centerGroup = new THREE.Group();
+centerGroup.position.set(0, 50, -80);
+
+const knotGeo = new THREE.TorusKnotGeometry(10, 2.5, 128, 16, 2, 3);
+const knotMat = new THREE.MeshStandardMaterial({ color: 0x6ee7ff, emissive: 0x1177aa, emissiveIntensity: 0.8, metalness: 0.9, roughness: 0.1 });
+const knot = new THREE.Mesh(knotGeo, knotMat);
+centerGroup.add(knot);
+
+const knotRing = new THREE.Mesh(new THREE.TorusGeometry(22, 0.2, 16, 128), new THREE.MeshBasicMaterial({ color: 0x6ee7ff, transparent: true, opacity: 0.6 }));
+centerGroup.add(knotRing);
+
+scene.add(centerGroup);
+
+// ---- Focal object 3: Left crystal (octahedron cluster) ----
+const leftGroup = new THREE.Group();
+leftGroup.position.set(-95, 0, -15);
+
+const crystalMat = new THREE.MeshStandardMaterial({ color: 0x9966ff, emissive: 0x5522aa, emissiveIntensity: 1.2, metalness: 0.5, roughness: 0.15, flatShading: true, transparent: true, opacity: 0.9 });
+const crystal1 = new THREE.Mesh(new THREE.OctahedronGeometry(7, 0), crystalMat);
+crystal1.position.set(0, 0, 0);
+leftGroup.add(crystal1);
+const crystal2 = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), crystalMat.clone());
+crystal2.position.set(8, -3, 3);
+leftGroup.add(crystal2);
+const crystal3 = new THREE.Mesh(new THREE.OctahedronGeometry(3, 0), crystalMat.clone());
+crystal3.position.set(-7, -4, 2);
+leftGroup.add(crystal3);
+const crystal4 = new THREE.Mesh(new THREE.OctahedronGeometry(2.5, 0), crystalMat.clone());
+crystal4.position.set(4, 6, -2);
+leftGroup.add(crystal4);
+
+const crystalWire = new THREE.Mesh(new THREE.OctahedronGeometry(11, 0), new THREE.MeshBasicMaterial({ color: 0xaa88ff, wireframe: true, transparent: true, opacity: 0.4 }));
+leftGroup.add(crystalWire);
+
+scene.add(leftGroup);
+
+// ---- Floating dust particles near focal objects ----
+function makeDust(center, count, spread, color){
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  for (let i=0;i<count;i++){
+    pos[i*3] = center.x + (Math.random()-0.5)*spread;
+    pos[i*3+1] = center.y + (Math.random()-0.5)*spread;
+    pos[i*3+2] = center.z + (Math.random()-0.5)*spread;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({ color, size: 0.8, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
+  return new THREE.Points(geo, mat);
+}
+scene.add(makeDust(rightGroup.position, 150, 40, 0xff7744));
+scene.add(makeDust(centerGroup.position, 200, 60, 0x6ee7ff));
+scene.add(makeDust(leftGroup.position, 150, 40, 0xaa88ff));
+
+// ============================================================
+// Camera path driven by scroll
+// ============================================================
+const cam = { x: 0, y: 20, z: 120, lx: 0, ly: 10, lz: 0 };
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Main camera timeline
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: '#scroll-container',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 1.2,
+    onUpdate: self => {
+      const p = self.progress;
+      window._scrollProgress = p;
+      // progress bar
+      document.getElementById('progress').style.transform = `scaleX(${p})`;
+      // counter
+      const sec = Math.min(4, Math.floor(p * 5));
+      document.getElementById('counterNum').textContent = String(sec+1).padStart(2,'0');
+    }
+  }
+});
+
+// Keyframes: 0% wide -> 25% right -> 50% up/center -> 75% left -> 100% wide
+tl.to(cam, { x: 0, y: 20, z: 120, lx: 0, ly: 10, lz: 0, duration: 0.20, ease: 'power2.inOut' }, 0);
+tl.to(cam, { x: 75, y: 8, z: 25, lx: 90, ly: 5, lz: -10, duration: 0.20, ease: 'power2.inOut' }, 0.20);
+tl.to(cam, { x: 0, y: 70, z: 60, lx: 0, ly: 50, lz: -80, duration: 0.20, ease: 'power2.inOut' }, 0.40);
+tl.to(cam, { x: -80, y: 6, z: 20, lx: -95, ly: 0, lz: -15, duration: 0.20, ease: 'power2.inOut' }, 0.60);
+tl.to(cam, { x: 0, y: 20, z: 120, lx: 0, ly: 10, lz: 0, duration: 0.20, ease: 'power2.inOut' }, 0.80);
+
+// Intro fade out
+gsap.to('#intro', {
+  opacity: 0,
+  scrollTrigger: {
+    trigger: '#scroll-container',
+    start: 'top top',
+    end: '8% top',
+    scrub: true,
+    onUpdate: self => {
+      if (self.progress > 0.95) document.getElementById('intro').style.pointerEvents = 'none';
+    }
+  }
+});
+
+// Scroll hint fade
+gsap.to('#scrollHint', {
+  opacity: 0,
+  scrollTrigger: { trigger: '#scroll-container', start: 'top top', end: '5% top', scrub: true }
+});
+
+// ============================================================
+// Section text fade in/out based on progress
+// ============================================================
+const sections = [
+  { el: document.getElementById('sec0'), start: 0.00, peak: 0.10, end: 0.20 },
+  { el: document.getElementById('sec1'), start: 0.20, peak: 0.30, end: 0.40 },
+  { el: document.getElementById('sec2'), start: 0.40, peak: 0.50, end: 0.60 },
+  { el: document.getElementById('sec3'), start: 0.60, peak: 0.70, end: 0.80 },
+  { el: document.getElementById('sec4'), start: 0.80, peak: 0.90, end: 1.00 }
+];
+
+function updateSections(p){
+  sections.forEach(s => {
+    let o = 0;
+    if (p >= s.start && p <= s.peak) {
+      o = (p - s.start) / (s.peak - s.start);
+    } else if (p > s.peak && p <= s.end) {
+      o = 1 - (p - s.peak) / (s.end - s.peak);
+    }
+    o = Math.max(0, Math.min(1, o));
+    // Ease
+    o = o * o * (3 - 2*o);
+    s.el.style.opacity = o;
+    const ty = (1 - o) * 30;
+    s.el.style.transform = `translateY(${ty}px)`;
+  });
+}
+
+// ============================================================
+// Animation loop
+// ============================================================
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  // Shader time
+  nebulaMat.uniforms.time.value = t;
+  mistMat.uniforms.time.value = t;
+
+  // Star rotation
+  stars1.rotation.y = t * 0.01;
+  stars2.rotation.y = -t * 0.008;
+  stars3.rotation.y = t * 0.005;
+
+  // Focal object animation
+  orbCore.rotation.x = t * 0.3; orbCore.rotation.y = t * 0.4;
+  orbWire.rotation.x = -t * 0.2; orbWire.rotation.y = t * 0.25;
+  orbRing.rotation.z = t * 0.5;
+  orbRing2.rotation.z = -t * 0.3;
+  orbCore.scale.setScalar(1 + Math.sin(t*2)*0.05);
+
+  knot.rotation.x = t * 0.2; knot.rotation.y = t * 0.3;
+  knotRing.rotation.x = t * 0.4; knotRing.rotation.z = t * 0.2;
+
+  crystal1.rotation.y = t * 0.3;
+  crystal2.rotation.y = -t * 0.4; crystal2.position.y = -3 + Math.sin(t*1.5)*0.5;
+  crystal3.rotation.y = t * 0.5; crystal3.position.y = -4 + Math.sin(t*1.2 + 1)*0.5;
+  crystal4.rotation.y = -t * 0.6; crystal4.position.y = 6 + Math.sin(t*1.8 + 2)*0.5;
+  crystalWire.rotation.y = -t * 0.1; crystalWire.rotation.x = t * 0.08;
+
+  // Camera smoothing
+  camera.position.x += (cam.x - camera.position.x) * 0.08;
+  camera.position.y += (cam.y - camera.position.y) * 0.08;
+  camera.position.z += (cam.z - camera.position.z) * 0.08;
+
+  // Subtle floating
+  camera.position.x += Math.sin(t*0.3) * 0.15;
+  camera.position.y += Math.cos(t*0.25) * 0.1;
+
+  // Look-at smoothing
+  const lookTarget = new THREE.Vector3(cam.lx, cam.ly, cam.lz);
+  camera.lookAt(lookTarget);
+
+  // Update section text opacities
+  const p = window._scrollProgress || 0;
+  updateSections(p);
+
+  renderer.render(scene, camera);
+}
+animate();
+
+// ============================================================
+// Resize
+// ============================================================
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Initial section visibility
+updateSections(0);
+</script>
+
+</body>
+</html>
+</reference_sketch>
+
+## Done when
+
+It matches the sketch's layout and hierarchy, uses my project's own framework, components and design tokens, follows my TS/JS and lint conventions, covers loading/empty/error states, and drops into my codebase without new dependencies or global config (unless I was told one is missing).
