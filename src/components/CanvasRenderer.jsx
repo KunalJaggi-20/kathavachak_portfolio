@@ -20,9 +20,8 @@ export default function CanvasRenderer({ onLoadingComplete, setScrollPercent }) 
     // Preload Logic
     for (let i = 1; i <= totalFrames; i++) {
       const img = new Image();
-      // Filename format: blender-01.jpg ... blender-09.jpg, then blender-10.jpg ... blender-480.jpg
-      const paddedNum = i < 10 ? `0${i}` : `${i}`;
-      img.src = `/ss1/ss1/blender-${paddedNum}.jpg`;
+      const imagePath = `/ss1/ss1/blender-${String(i).padStart(2, "0")}.jpg`;
+      img.src = imagePath;
 
       img.onload = () => {
         loadedCount++;
